@@ -27,9 +27,12 @@ public class BracketsChecker {
         Stack<Character> stack = new Stack<Character>();
         Scanner reader = new Scanner(file);
         reader.useDelimiter("");
+        StringBuilder equalsBracketsStringBuilder = new StringBuilder();
         while (reader.hasNext()) {
             Character character = reader.next().charAt(0);
-            if (brackets.containsLeft(character)) {
+            if (brackets.containsLeft(character) && brackets.containsRight(character)) {
+                equalsBracketsStringBuilder.append(character);
+            }else if (brackets.containsLeft(character)) {
                 stack.push(character);
             } else if (brackets.containsRight(character)) {
                 if (stack.empty()) {
@@ -42,9 +45,18 @@ public class BracketsChecker {
                 }
             }
         }
-        if (!stack.empty()) {
+        if (!stack.empty() && (equalsBracketsStringBuilder.length() % 2 == 0)) {
+            char[] equalsBrackets = equalsBracketsStringBuilder.toString().toCharArray();
+            for (int i = 0; i < equalsBracketsStringBuilder.length() / 2; i++) {
+                if (!(equalsBrackets[i] == equalsBrackets[equalsBracketsStringBuilder.length() - i])) {
+                    throw new BracketsNotCorrectException(file.getName() + " " + equalsBrackets[i]);
+                }
+            }
+            return true;
+        } else if (!stack.empty()){
             throw new BracketsNotCorrectException(file.getName() + " Bracket is missing " + stack.pop());
         }
+
         return true;
     }
 

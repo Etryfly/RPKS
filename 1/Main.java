@@ -14,14 +14,6 @@ public class Main {
 
 
 
-    @Test
-    public void Test() {
-       //TODO обмазать тестами
-    }
-
-
-
-
     public static void main(java.lang.String[] args) {
         if (args.length <2) {
             System.out.println("No arguments specified");
