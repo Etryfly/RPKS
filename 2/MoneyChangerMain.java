@@ -2,8 +2,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.*;
 
 public class MoneyChangerMain {
     public static void main(String[] args) {
@@ -20,13 +19,33 @@ public class MoneyChangerMain {
         }
 
         ArrayList<Integer> change = new ArrayList<>();
+        boolean isSuccess = getChange(sum, change, coins, 0);
 
-        System.out.println(getChange(sum, change, coins, 0));
-        for (Integer coin:
-             change) {
-            System.out.println(coin);
+        if (isSuccess) {
 
+            HashMap<Integer, Integer> coinsAndCounts = new HashMap<>();
+
+            for (int i = 0; i < change.size(); i++) {
+                int coin = change.get(i);
+                if (coinsAndCounts.containsKey(coin)) {
+                    int count = (int) coinsAndCounts.get(coin);
+                    coinsAndCounts.remove(coin);
+                    coinsAndCounts.put(coin, ++count);
+                } else {
+                    coinsAndCounts.put(coin, 1);
+                }
+            }
+
+            System.out.print(sum + "-> ");
+            Iterator it = coinsAndCounts.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry pair = (Map.Entry) it.next();
+                System.out.print(" " + pair.getKey() + "[" + pair.getValue() + "] ");
+            }
+        } else {
+            System.out.println("Can't exchange");
         }
+
 
     }
 
