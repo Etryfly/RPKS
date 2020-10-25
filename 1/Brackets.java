@@ -1,14 +1,13 @@
+import Exceptions.PairBracketNotFoundException;
+
 import java.util.List;
 
 public class Brackets {
     public List<Bracket> brackets;
 
 
-
-
     public boolean containsLeft(Character leftBracket) {
-        for (Bracket bracket:
-             brackets) {
+        for (Bracket bracket : brackets) {
             if (bracket.getLeft() == leftBracket) return true;
         }
         return false;
@@ -16,7 +15,7 @@ public class Brackets {
 
 
     public boolean containsRight(Character rightBracket) {
-        for (Bracket bracket:
+        for (Bracket bracket :
                 brackets) {
             if (bracket.getRight() == rightBracket) return true;
         }

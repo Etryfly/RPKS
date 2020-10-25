@@ -8,16 +8,21 @@ public class MoneyChangerMain {
     public static void main(String[] args) {
         Scanner reader = new Scanner(System.in);
         System.out.println("Sum: ");
-        int sum = reader.nextInt();
-        int n = 0;
-        System.out.println("Enter count of coins");
-        n = reader.nextInt();
-        System.out.println("Coins: ");
-        ArrayList<Integer> coins = new ArrayList<Integer>();
-        for (int i = 0; i < n; i++) {
-            coins.add(reader.nextInt());
+        int sum = 0;
+        ArrayList<Integer> coins = new ArrayList<>();
+        try {
+            sum = reader.nextInt();
+            int n = 0;
+            System.out.println("Enter count of coins");
+            n = reader.nextInt();
+            System.out.println("Coins: ");
+            for (int i = 0; i < n; i++) {
+                coins.add(reader.nextInt());
+            }
+        } catch (InputMismatchException e) {
+            System.out.println("Input data is incorrect");
+            return;
         }
-
         ArrayList<Integer> change = new ArrayList<>();
         boolean isSuccess = getChange(sum, change, coins, 0);
 
@@ -28,7 +33,7 @@ public class MoneyChangerMain {
             for (int i = 0; i < change.size(); i++) {
                 int coin = change.get(i);
                 if (coinsAndCounts.containsKey(coin)) {
-                    int count = (int) coinsAndCounts.get(coin);
+                    int count = coinsAndCounts.get(coin);
                     coinsAndCounts.remove(coin);
                     coinsAndCounts.put(coin, ++count);
                 } else {
