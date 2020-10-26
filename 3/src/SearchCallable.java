@@ -60,7 +60,7 @@ public class SearchCallable implements Callable<ArrayList<FinderResult>> {
                     }
 
                     fr.position = prevPos;
-                    //TODO add prev strings to fr
+
                     result.add(fr);
                     Finder.matches.incrementAndGet();
                 }
