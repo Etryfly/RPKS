@@ -1,8 +1,9 @@
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Random;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class Finder {
@@ -18,7 +19,7 @@ public class Finder {
 
     public static void main(String[] args) {
 
-        if (args.length != 2) {
+        if (args.length < 2) {
             System.out.println("Invalid arguments");
             return;
         }
@@ -39,17 +40,19 @@ public class Finder {
             ExecutorService service = Executors.newFixedThreadPool(cores);
             long start = 0;
             long fragmentSize = file.length() / cores;
-            ArrayList<Future<ArrayList<Long>>> arr = new ArrayList<>();
+            ArrayList<Future<ArrayList<FinderResult>>> arr = new ArrayList<>();
             System.out.println("Creating threads");
+            long stringsBefore = 3;
+            long stringsAfter = 5;
             for (int i = 0; i < cores; i++) {
                 long fragmentEnd = getNextNewLineSymbolPos(start + fragmentSize, file);
-                 arr.add(service.submit(new SearchCallable(start, fragmentEnd , args[0], word )));
+                 arr.add(service.submit(new SearchCallable(start, fragmentEnd , args[0], word, stringsBefore, stringsAfter)));
                 start = fragmentEnd;
             }
 
             long length = file.length() - 1;
             while (true) {
-                for (Future<ArrayList<Long>> future : arr) {
+                for (Future<ArrayList<FinderResult>> future : arr) {
                     while (!future.isDone()) {
                         System.out.println(checked.toString() + "/" + length + " (" +  checked.doubleValue()/length * 100 +"%) : " + matches + " Matches");
                     }
@@ -61,11 +64,15 @@ public class Finder {
 
             System.out.println("Writing into output file");
             try(BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
-                for (Future<ArrayList<Long>> future :
+                for (Future<ArrayList<FinderResult>> future :
                         arr) {
-                    for (Long pos:
+                    for (FinderResult fr:
                             future.get()) {
-                        writer.write(getLineByPos(pos, file) + "\n");
+                        for (Long prevStrPos : fr.previousStringsPos) {
+                            writer.write(getLineByPos(prevStrPos, file) + "\n");
+                        }
+                        writer.write(getLineByPos(fr.position, file) + "\n");
+                        writer.write("-------------------------\n");
                     }
                 }
                 writer.flush();
@@ -76,9 +83,7 @@ public class Finder {
             System.out.println("Can't read file");
             System.out.println(e.getMessage());
             return;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
 
