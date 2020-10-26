@@ -14,14 +14,12 @@ public class SearchCallable implements Callable<ArrayList<FinderResult>> {
     private RandomAccessFile file;
     private final String wordForSearch;
     private final long stringsBefore;
-    private final long stringsAfter;
 
 
-    public SearchCallable(long startPos, long endPos, String fileName, String wordForSearch, long stringsBefore, long stringsAfter) {
+    public SearchCallable(long startPos, long endPos, String fileName, String wordForSearch, long stringsBefore) {
         this.startPos = startPos;
         this.endPos = endPos;
         this.stringsBefore = stringsBefore;
-        this.stringsAfter = stringsAfter;
         try {
             this.file = new RandomAccessFile(fileName, "r");
         } catch (FileNotFoundException e) {
@@ -48,7 +46,7 @@ public class SearchCallable implements Callable<ArrayList<FinderResult>> {
                 String line = file.readLine();
                 if (line == null) break;
                 if (stringsBefore != 0) {
-                    if (strBuffer.size() >= stringsBefore) {
+                    if (strBuffer.size() > stringsBefore) {
                         strBuffer.pop();
                     }
                     strBuffer.add(prevPos);
@@ -56,7 +54,7 @@ public class SearchCallable implements Callable<ArrayList<FinderResult>> {
                 Finder.checked.addAndGet(line.length() + sepLen);
                 if (line.contains(wordForSearch)) {
                     FinderResult fr = new FinderResult();
-                    for (int i = 0; strBuffer.size() > 1; i++) {
+                    while (strBuffer.size() > 1) {
 
                         fr.previousStringsPos.add(strBuffer.pop());
                     }

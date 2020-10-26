@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,6 +34,11 @@ public class Finder {
             System.out.println("File not found");
             return;
         }
+        System.out.println("Enter count of lines before found word: ");
+        Scanner scanner = new Scanner(System.in);
+        long stringsBefore = scanner.nextInt();
+        System.out.println("Enter count of lines after found word: ");
+        long stringsAfter = scanner.nextInt();
         String word = args[1];
         File outputFile = new File(resultFile);
         try {
@@ -42,11 +48,10 @@ public class Finder {
             long fragmentSize = file.length() / cores;
             ArrayList<Future<ArrayList<FinderResult>>> arr = new ArrayList<>();
             System.out.println("Creating threads");
-            long stringsBefore = 3;
-            long stringsAfter = 5;
+
             for (int i = 0; i < cores; i++) {
                 long fragmentEnd = getNextNewLineSymbolPos(start + fragmentSize, file);
-                 arr.add(service.submit(new SearchCallable(start, fragmentEnd , args[0], word, stringsBefore, stringsAfter)));
+                 arr.add(service.submit(new SearchCallable(start, fragmentEnd , args[0], word, stringsBefore)));
                 start = fragmentEnd;
             }
 
@@ -72,6 +77,9 @@ public class Finder {
                             writer.write(getLineByPos(prevStrPos, file) + "\n");
                         }
                         writer.write(getLineByPos(fr.position, file) + "\n");
+                        for (String line : getNStringsAfter(fr.position, stringsAfter, file)) {
+                            writer.write(line + "\n");
+                        }
                         writer.write("-------------------------\n");
                     }
                 }
@@ -95,7 +103,6 @@ public class Finder {
 
     public static Long getNextNewLineSymbolPos(long currPos, RandomAccessFile file) throws IOException {
         file.seek(currPos);
-//        if (currPos > file.length()) return file.length();
         try {
             file.readLine();
             return file.getFilePointer();
@@ -103,5 +110,17 @@ public class Finder {
             return file.length();
         }
 
+    }
+    
+    private static ArrayList<String> getNStringsAfter(Long pos, Long n, RandomAccessFile file) throws IOException {
+        ArrayList<String> result = new ArrayList<>();
+        file.seek(pos);
+        file.readLine();
+        for (int i = 0; i < n; i++) {
+            String str = file.readLine();
+            if (str != null)
+                result.add(str);
+        }
+        return result;
     }
 }
