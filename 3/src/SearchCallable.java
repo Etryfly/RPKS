@@ -51,11 +51,11 @@ public class SearchCallable implements Callable<ArrayList<FinderResult>> {
                     }
                     strBuffer.add(prevPos);
                 }
+                
                 Finder.checked.addAndGet(line.length() + sepLen);
                 if (line.contains(wordForSearch)) {
                     FinderResult fr = new FinderResult();
                     while (strBuffer.size() > 1) {
-
                         fr.previousStringsPos.add(strBuffer.pop());
                     }
 
