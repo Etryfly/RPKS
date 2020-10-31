@@ -1,5 +1,6 @@
 import java.io.*;
 
+import java.lang.management.ManagementFactory;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -90,7 +91,9 @@ public class LogsAnalyzer {
         long count = 0;
         long sumDeltaTime = 0;
         BufferedReader reader = new BufferedReader(new FileReader(fileName));
-
+        int logsBufferSize = 500;
+        ArrayList<Long> medians = new ArrayList<>();
+        ArrayList<Long> deltaTimeArr = new ArrayList<>();
         double n = 0;
         long countOfLinesInFile = getLinesCount(fileName);
         while (true) {
@@ -100,19 +103,24 @@ public class LogsAnalyzer {
             if (logs.containsKey(log.ID)) {
                 LogRow prevLog = logs.get(log.ID);
                 long deltaTimeInSeconds = (log.DateTime.getTime() - prevLog.DateTime.getTime()) / 1000;
-                count++;
-                sumDeltaTime += deltaTimeInSeconds;
+                deltaTimeArr.add(deltaTimeInSeconds);
                 logs.remove(log.ID);
             } else {
                 logs.put(log.ID, log);
             }
             n++;
+            if (deltaTimeArr.size() > logsBufferSize) {
+                deltaTimeArr.sort(null);
+                medians.add(deltaTimeArr.get(deltaTimeArr.size() / 2));
+                deltaTimeArr.clear();
+            }
             System.out.println("Counting average response time " + n + "/" +
                     countOfLinesInFile + "(" + (n / countOfLinesInFile) * 100 + "%)");
         }
-
+        medians.add(deltaTimeArr.get(deltaTimeArr.size() / 2));
         reader.close();
-        return sumDeltaTime / count;
+        medians.sort(null);
+        return medians.get(medians.size() / 2);
 
 
     }
