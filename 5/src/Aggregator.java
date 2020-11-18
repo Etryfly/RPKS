@@ -1,8 +1,7 @@
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Array;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
 import java.text.ParseException;
 import java.util.*;
 
@@ -23,9 +22,14 @@ public class Aggregator {
                 case "A":
                     A();
                     break;
+                    
+                case "B":
+                    B();
+                    break;
 
-
-
+                case "C":
+                    C();
+                    break;
 
                 default:
                     return;
@@ -33,28 +37,177 @@ public class Aggregator {
         }
     }
 
-    private static void A() {
-        for (String group : getAllGroupNames()) {
-            System.out.println("Group name : " + group);
-            int midMark = getMidGroupMark(group);
-            ArrayList<Student> resultStudents = new ArrayList<>();
-            for (Student student : getStudentsByGroupName(group)) {
-                int studentMark = getSumOfMarksByStudentId(student.getId());
-                if (studentMark > midMark) {
-                    resultStudents.add(student);
+    private static void C() {
+        if (CacheHelper.isCacheActual("C")) {
+            CacheHelper.printCache("C");
+        } else {
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter("Cache/C"))) {
+
+                for (String groupName : getAllGroupNames()) {
+
+                    subjects.sort((Subject a, Subject b) -> {
+                        int failA = getFailPercent(groupName, a.getId());
+                        int failB = getFailPercent(groupName, b.getId());
+
+                        if (failA > failB) return -1;
+                        if (failA < failB) return 1;
+
+                        return 0;
+                    });
+                    writer.write(groupName + " group\n");
+                    System.out.println(groupName + " group");
+                    for (int i = 0; i < subjects.size() && i < 5; i++) {
+                        writer.write(subjects.get(i).getName() + " " +
+                                getFailPercent(groupName, subjects.get(i).getId()) + "\n");
+                        System.out.println(subjects.get(i).getName() + " " +
+                                getFailPercent(groupName, subjects.get(i).getId()));
+                    }
+                    System.out.println();
+                    writer.newLine();
                 }
-            }
 
-            System.out.println("Mid mark : " + midMark);
-
-            resultStudents.sort(Aggregator::CompareStudentsByMidMarks);
-            for (int i = 0; i < resultStudents.size() && i < 5; i++) {
-                System.out.println(resultStudents.get(i).getName() + " " +
-                        getSumOfMarksByStudentId(resultStudents.get(i).getId()));
-
+                writer.flush();
+                CacheHelper.updateWriteDate("C");
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
+
+    private static Subject getSubjectByName(String name) {
+        for (Subject s : subjects) {
+            if (s.getName().equals(name)) return s;
+
+        }
+        return null;
+    }
+
+    private static int getFailPercent(String groupName, int subjectId) {
+        double countOfStudents = 0;
+        double countOfFail = 0;
+        for (Student student : getStudentsByGroupName(groupName)) {
+            countOfStudents ++;
+            for (Mark mark : marks) {
+                if (mark.getStudentId() == student.getId()) {
+                    if (mark.getSubjectId() == subjectId) {
+                        if (mark.getMark() == 2) {
+                            countOfFail ++;
+                        }
+                    }
+                }
+            }
+        }
+
+        return (int) ((countOfFail / countOfStudents) * 100);
+    }
+
+    private static void B() {
+        if (CacheHelper.isCacheActual("B")) {
+            CacheHelper.printCache("B");
+        } else {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter("Cache/B"))) {
+
+                ArrayList<String> groupNames = getAllGroupNames();
+                groupNames.sort((String a, String b) -> {
+                    int aPercentage = getLowestPercentageByGroupName(a);
+                    int bPercentage = getLowestPercentageByGroupName(b);
+                    if (aPercentage > bPercentage) return -1;
+                    if (aPercentage < bPercentage) return 1;
+                    return 0;
+                });
+
+                for (int i = 0; i < groupNames.size() && i < 5; i++) {
+                    writer.write(groupNames.get(i) + " " + getCountOfLowestMarksInGroup(groupNames.get(i)) +
+                            " students (" + getLowestPercentageByGroupName(groupNames.get(i)) + "%)\n");
+                    System.out.println(groupNames.get(i) + " " + getCountOfLowestMarksInGroup(groupNames.get(i)) +
+                            " students (" + getLowestPercentageByGroupName(groupNames.get(i)) + "%)");
+                }
+
+                writer.flush();
+                CacheHelper.updateWriteDate("B");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static int getStudentsCount(String groupName) {
+        int count = 0;
+        for (Group group : groups) {
+            if (group.getName().equals(groupName)) count ++;
+        }
+        return count;
+    }
+
+    private static int getLowestPercentageByGroupName(String groupName) {
+        double countOfLowest = getCountOfLowestMarksInGroup(groupName);
+        double countOfStudents = getStudentsCount(groupName);
+
+        return (int) ((countOfLowest / countOfStudents) * 100);
+    }
+
+
+
+    private static int getCountOfLowestMarksInGroup(String groupName) {
+        int count = 0;
+        for (Student student : getStudentsByGroupName(groupName)) {
+            for (Mark mark : marks) {
+                if (mark.getStudentId() == student.getId()) {
+                    if (mark.getMark() == 2) {
+                        count ++;
+                        break;
+                    }
+                }
+            }
+
+        }
+        return count;
+    }
+
+    private static void A() {
+
+        if (CacheHelper.isCacheActual("A")) {
+            CacheHelper.printCache("A");
+        } else {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter("Cache/A"))) {
+
+                for (String group : getAllGroupNames()) {
+                    System.out.println("Group name : " + group);
+                    writer.write("Group name : " + group + '\n');
+                    int midMark = getMidGroupMark(group);
+                    ArrayList<Student> resultStudents = new ArrayList<>();
+                    for (Student student : getStudentsByGroupName(group)) {
+                        int studentMark = getSumOfMarksByStudentId(student.getId());
+                        if (studentMark > midMark) {
+                            resultStudents.add(student);
+                        }
+                    }
+
+                    System.out.println("Mid mark : " + midMark);
+                    writer.write("Mid mark : " + midMark + '\n');
+
+                    resultStudents.sort(Aggregator::CompareStudentsByMidMarks);
+                    for (int i = 0; i < resultStudents.size() && i < 5; i++) {
+                        System.out.println(resultStudents.get(i).getName() + " " +
+                                getSumOfMarksByStudentId(resultStudents.get(i).getId()));
+                        writer.write(resultStudents.get(i).getName() + " " +
+                                getSumOfMarksByStudentId(resultStudents.get(i).getId()) + '\n');
+
+                    }
+
+                    System.out.println();
+                    writer.newLine();
+                    writer.flush();
+                }
+                CacheHelper.updateWriteDate("A");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
 
     private static int CompareStudentsByMidMarks(Student a, Student b) {
         int aMarks = getSumOfMarksByStudentId(a.getId());
@@ -64,6 +217,8 @@ public class Aggregator {
         return 0;
 
     }
+
+
 
     private static ArrayList<String> getAllGroupNames() {
         ArrayList<String> result = new ArrayList<>();
