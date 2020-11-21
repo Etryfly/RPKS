@@ -104,9 +104,9 @@ public class InitFiles {
         students.add("Елисеева Эмилия Алексеевна 	");
         students.add("Некрестьянов Порфирий Климентович 	");
         students.add("Костомаров Бронислав Якубович 	");
-        students.add("Янечко Мир Демьянович 	");
-        students.add("Синицын Ростислав Михаилович 	");
-        students.add("Шихина Юлия Георгиевна 	");
+        students.add("Янечко Мир Демьянович");
+        students.add("Синицын Ростислав Михаилович");
+        students.add("Шихина Юлия Георгиевна");
 
         ArrayList<String> groups = new ArrayList<>();
         groups.add("101");
@@ -121,7 +121,8 @@ public class InitFiles {
             for (int i = 0; i < students.size(); i++) {
                 writer.write(Integer.toString(i));
                 writer.write(" ");
-                writer.write(students.get(i));
+                String[] studentName = students.get(i).split(" ");
+                writer.write(studentName[0] + " " + studentName[1] + " " + studentName[2]);
                 writer.newLine();
             }
             writer.flush();

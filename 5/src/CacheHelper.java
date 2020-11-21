@@ -1,23 +1,36 @@
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 
 public  class CacheHelper {
     public static void updateWriteDate(String prefix) {
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("Cache/" + prefix + "times"))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("Cache/" + prefix + "hash"))) {
 
 
-           writer.write(getModTime("FIO") + " ");
-           writer.write(getModTime("Groups") + " ");
-           writer.write(getModTime("Marks") + " ");
-           writer.write(getModTime("Subjects") + " ");
+           writer.write(calculateHashSum("FIO") + " ");
+           writer.write(calculateHashSum("Groups") + " ");
+           writer.write(calculateHashSum("Marks") + " ");
+           writer.write(calculateHashSum("Subjects") + " ");
            writer.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static String calculateHashSum(String fileName) throws IOException {
+        Process proc=Runtime.getRuntime().exec("md5sum " + "/home/etryfly/IdeaProjects/Study/5/res/" + fileName);
+        BufferedReader read = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+        String responce = read.readLine();
+        return responce.split(" ")[0];
+
     }
 
     public static void printCache(String prefix) {
@@ -38,17 +51,15 @@ public  class CacheHelper {
     }
 
     public static boolean isCacheActual(String prefix) {
-        try (BufferedReader reader = new BufferedReader(new FileReader("Cache/" + prefix + "times"))) {
-            ArrayList<Long> times = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader("Cache/" + prefix + "hash"))) {
+            ArrayList<String> hashes = new ArrayList<>();
             String[] str = reader.readLine().split(" ");
-            for (String s : str) {
-                times.add(Long.parseLong(s));
-            }
+            hashes.addAll(Arrays.asList(str));
 
-            return getModTime("FIO") == times.get(0) &&
-                    getModTime("Groups") == times.get(1) &&
-                    getModTime("Marks") == times.get(2) &&
-                    getModTime("Subjects") == times.get(3);
+            return calculateHashSum("FIO").equals(hashes.get(0)) &&
+                    calculateHashSum("Groups").equals(hashes.get(1)) &&
+                    calculateHashSum("Marks").equals(hashes.get(2)) &&
+                    calculateHashSum("Subjects").equals(hashes.get(3));
 
         }
         catch (FileNotFoundException e) {
@@ -61,8 +72,5 @@ public  class CacheHelper {
         return false;
     }
 
-    private static long getModTime(String fileName) throws IOException {
-        File file = new File(fileName);
-        return file.lastModified();
-    }
+
 }
